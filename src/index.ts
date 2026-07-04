@@ -11,6 +11,8 @@ import customersRoutes from "./routes/customers";
 import ordersRoutes from "./routes/orders";
 import expensesRoutes from "./routes/expenses";
 import dashboardRoutes from "./routes/dashboard";
+import printRoutes from "./routes/print";
+import publicRoutes from "./routes/public";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +29,8 @@ app.use("/api/customers", customersRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/expenses", expensesRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/public", publicRoutes);
+app.use("/api/print", printRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });

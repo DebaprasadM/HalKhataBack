@@ -53,12 +53,25 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { customerId, items, discount = 0, tax = 0, paymentMethod, notes } = req.body;
+    let { customerId, customerPhone, customerName, items, discount = 0, tax = 0, paymentMethod, notes } = req.body;
     if (!items || !items.length) return res.status(400).json({ error: "Order must have at least one item" });
 
     const userId = req.user!.userId;
     const subtotal = items.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0);
     const total = subtotal + tax - discount;
+
+    // Resolve customer: if phone given but no id, find or create
+    if (!customerId && customerPhone) {
+      const existing = await prisma.customer.findUnique({ where: { phone: customerPhone } });
+      if (existing) {
+        customerId = existing.id;
+      } else {
+        const newCustomer = await prisma.customer.create({
+          data: { name: customerName || customerPhone, phone: customerPhone },
+        });
+        customerId = newCustomer.id;
+      }
+    }
 
     const invoiceNo = generateInvoiceNo();
 

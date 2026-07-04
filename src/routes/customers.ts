@@ -26,6 +26,19 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/check/:phone", async (req: Request, res: Response) => {
+  try {
+    const phone = req.params.phone as string;
+    const customer = await prisma.customer.findUnique({
+      where: { phone },
+    });
+    if (customer) return res.json({ exists: true, customer });
+    return res.json({ exists: false });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const customer = await prisma.customer.findUnique({

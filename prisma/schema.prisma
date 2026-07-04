@@ -58,7 +58,7 @@ model Customer {
   id            Int       @id @default(autoincrement())
   name          String
   email         String?
-  phone         String?
+  phone         String?   @unique
   address       String?
   creditBalance Decimal   @default(0) @map("credit_balance") @db.Decimal(10, 2)
   createdAt     DateTime  @default(now()) @map("created_at")
