@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  businessName String?   @map("business_name")
+  role         String    @default("owner")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  orders       Order[]
+  expenses     Expense[]
+  purchases    Purchase[]
+
+  @@map("users")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  sku         String?   @unique
+  barcode     String?
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  costPrice   Decimal?  @map("cost_price") @db.Decimal(10, 2)
+  stockQty    Int       @default(0) @map("stock_qty")
+  lowStockQty Int       @default(5) @map("low_stock_qty")
+  categoryId  Int?      @map("category_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  category    Category? @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  purchases   Purchase[]
+
+  @@map("products")
+}
+
+model Customer {
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  creditBalance Decimal   @default(0) @map("credit_balance") @db.Decimal(10, 2)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  orders        Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  invoiceNo     String      @unique @map("invoice_no")
+  customerId    Int?        @map("customer_id")
+  userId        Int         @map("user_id")
+  subtotal      Decimal     @db.Decimal(10, 2)
+  tax           Decimal     @default(0) @db.Decimal(10, 2)
+  discount      Decimal     @default(0) @db.Decimal(10, 2)
+  total         Decimal     @db.Decimal(10, 2)
+  status        String      @default("completed")
+  paymentMethod String?     @map("payment_method")
+  notes         String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int      @map("order_id")
+  productId  Int?     @map("product_id")
+  productName String? @map("product_name")
+  quantity   Int
+  unitPrice  Decimal  @map("unit_price") @db.Decimal(10, 2)
+  totalPrice Decimal  @map("total_price") @db.Decimal(10, 2)
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product? @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  category    String?
+  date        DateTime @default(now())
+  userId      Int      @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("expenses")
+}
+
+model Purchase {
+  id         Int      @id @default(autoincrement())
+  productId  Int      @map("product_id")
+  quantity   Int
+  unitCost   Decimal  @map("unit_cost") @db.Decimal(10, 2)
+  totalCost  Decimal  @map("total_cost") @db.Decimal(10, 2)
+  supplier   String?
+  date       DateTime @default(now())
+  userId     Int      @map("user_id")
+  product    Product  @relation(fields: [productId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("purchases")
+}
